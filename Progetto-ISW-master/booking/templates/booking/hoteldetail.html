@@ -1,0 +1,166 @@
+{% load staticfiles %}
+{% load booking_extras %}
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Hotel {{hotel}}</title>
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+        <link href="{% static 'booking/style.css' %}" rel="stylesheet" type="text/css">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light" id="navbar">
+            <a class="navbar-brand" href="{% url 'booking:home' %}">Booking</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{% url 'booking:home' %}">Home<span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-primary" id="myBtn">Aggiungi Camere</button>
+                    </li>
+              </ul>
+                <form class="form-inline my-2 my-lg-0" action="{% url 'booking:logout' %}">
+                     <button class="btn btn-danger my-2 my-sm-0" type="submit">Logout</button>
+                 </form>
+            </div>
+        </nav>
+
+
+        <div id="myModal" class="modal">
+                <form class="modal-content" method="post" action="{% url 'booking:hoteldetail' hotel %}">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col">
+                            {{form.numero}}
+                        </div>
+                        <div class="col">
+                            {{form.posti_letto}}
+                        </div>
+                        <div class="col">
+                            {{form.servizi}}
+                            <small id="serviceshelp" class="form-text text-muted">Scrivere i servizi in fila dividendoli con delle virgole.</small>
+                        </div>
+                        <div class="col">
+                        <button type="submit" class="btn btn-success">Conferma</button>
+                    </div>
+                    <div class="col">
+                        <span class="close">
+                            <button type="button" class="btn btn-danger">Annulla</button>
+                        </span>
+                    </div>
+                    </div>
+
+                </form>
+
+        </div>
+
+        <div class="dati">
+            <ul>
+                <li>Hotel: {{hotel}}</li>
+                <li>Descrizione: {{descrizione}}</li>
+                <li>Indirizzo: {{indirizzo}}, {{citta}}</li>
+            </ul>
+        </div>
+
+        <div class="container">
+                <table class="table table-hover">
+                    <div class="containerCamere">
+                    <thead class="thead-dark">
+                        <tr>
+                          <th scope="col">Numero</th>
+                          <th scope="col">Posti</th>
+                          <th scope="col">Servizi</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                       {% for camera in listaCamere %}
+                       {% with index=forloop.counter0 %}
+                        {% with servizio=listaServizi|return_item:index %}
+                        <tr>
+
+                          <td>{{camera.numero}}</td>
+                          <td>{{camera.posti_letto}}</td>
+
+                          <td>{% for serv in servizio %}
+                              {{serv}}<br>
+                              {% endfor %}
+                          </td>
+                        </tr>
+                       {% endwith %}
+                        {% endwith %}
+                      {% endfor %}
+                    </tbody>
+                    </div>
+                </table>
+            {% if erroreservizio %}
+                <div class="container error-add-data" style=" color: red" align="center">
+                    <h3>Hai inserito dei servizi errati</h3>
+                </div>
+            {% endif %}
+
+            {% if errorcamera %}
+            <div class="container error-add-data" style=" color: red" align="center">
+              <h3>Non ci possono essere due camere con lo stesso numero.</h3>
+            </div>
+            {% endif %}
+
+            {% if invalidForm %}
+            <div class="container error-add-data" style=" color: red" align="center">
+              <h3>Sono stati inseriti dati nel form non validi.</h3>
+            </div>{% endif %}
+
+
+        </div>
+
+
+        <script>
+            $(document).ready(function()
+            {
+                // Get the modal
+                var modal = document.getElementById('myModal');
+
+                // Get the button that opens the modal
+                var btn = document.getElementById("myBtn");
+
+                // Get the <span> element that closes the modal
+           var span = document.getElementsByClassName("close")[0];
+
+                // When the user clicks the button, open the modal
+                btn.onclick = function() {
+                    modal.style.display = "block";
+                }
+
+                // When the user clicks on <span> (x), close the modal
+                span.onclick = function()
+                {
+                    modal.style.display = "none";
+                }
+
+                // When the user clicks anywhere outside of the modal, close it
+                window.onclick = function(event) {
+                    if (event.target == modal) {
+                        modal.style.display = "none";
+                    }
+                }
+        });
+
+
+        </script>
+    </body>
+</html>

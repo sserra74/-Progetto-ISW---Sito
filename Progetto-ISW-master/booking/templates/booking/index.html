@@ -1,0 +1,238 @@
+{% load staticfiles %}
+{% load booking_extras %}
+<html>
+
+<head>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
+integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+<link href="{% static 'booking/style.css' %}" rel="stylesheet" type="text/css">
+
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"
+integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+
+<title>Index</title>
+
+
+</head>
+
+<body>
+
+
+<!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <a class="navbar-brand" href="#">Booking</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse"
+  data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+  aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="{% url 'booking:login' %}">Login<span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{% url 'booking:registrazione'%}">Registrazione</a>
+      </li>
+    </ul>
+
+  </div>
+</nav>
+
+<!-- Fine Navbar -->
+
+<div class="container">
+  <h3 class="h3-search">Prenota una camera</h3>
+</div>
+
+<div class="container searchform">
+  <form id="searchrooms" method="post">
+    {% csrf_token %}
+    <div class="row container">
+      <div class="col form-inline">
+        <label class="labelSearch" for="{{form.citta.id_for_label}}">Città</label>
+        <!--<input class="form-control" type="text" placeholder="Citta" id="citySearch" name="city" required/>-->
+        {{form.citta}}
+      </div>
+      <div class="col form-inline">
+        <label class="labelSearch" for="{{form.postiletto.id_for_label}}">Numero Persone</label>
+        <!--<input class="form-control" type="number" placeholder="Numero Persone" id="nPersSearch" name="size" required/>-->
+        {{form.postiletto}}
+      </div>
+      <div class="col form-inline">
+        <label class="labelSearch" for="{{form.checkin.id_for_label}}">Da</label>
+        <!--<input class="form-control" type="date" placeholder="Dal" id="fromSearch" name="checkin" required/>-->
+        {{form.checkin}}
+      </div>
+      <div class="col form-inline">
+        <label class="labelSearch" for="{{form.checkout.id_for_label}}">A</label>
+        <!--<input class="form-control" type="date" placeholder="Al" id="toSearch" name="checkout" required/>-->
+        {{form.checkout}}
+      </div>
+      <div class="col form-inline submitSearch">
+        <button type="submit" class="btn btn-primary">Cerca</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+
+<div class="container h1-search">
+  <h1>Risultati</h1>
+</div>
+
+{% if listaCamere %}
+<div class="container tablesearch">
+  <table class="table table-hover">
+      <thead class="thead-dark">
+          <tr>
+            <th scope="col">Hotel</th>
+            <th scope="col">Posti</th>
+            <th scope="col">Servizi</th>
+          </tr>
+        </thead>
+        <tbody id="searchBody">
+        {% for camera in listaCamere %}
+        {% with index=forloop.counter0 %}
+        {% with servizio=listaServizi|return_item:index %}
+          <tr>
+            <td data-camera="{{camera.numero}}">{{camera.hotel.nome}}</td>
+            <td>{{camera.posti_letto}}</td>
+            <td>
+              {% for serv in servizio %}
+              {{serv}}<br />
+              {% endfor %}
+            </td>
+          </tr>
+        {% endwith %}
+        {% endwith %}
+        {% endfor %}
+      </tbody>
+  </table>
+  <div class="container popupprenota" id="popupprenota">
+    <h4>Inserisci la mail e conferma la tua prenotazione.</h4>
+        <form id="formPrenota">
+            <div class="row container">
+              <div class="col form-inline mailcontainer">
+                <input class="form-control" type="email" id="mailPrenota" placeholder = "Inserisci la tua mail" name="email">
+              </div>
+              <div class="col form-inline btnprenota">
+                <button type="submit" class="btn btn-primary" id="prenotaBtn">Prenota</button>
+                <button type="button" class="btn btn-danger" id="annullaPrenota">Annulla</button>
+              </div>
+             </div>
+        </form>
+    <p class="text-success" id="prenEff">Prenotazione effettuata</p>
+  </div>
+</div>
+{% endif %}
+
+{% if notAvailable %}
+<div class="container searchnoresult">
+  <h3>Nessun risultato trovato</h3>
+</div>
+{% endif %}
+{% if dateError %}
+  <div class="container searchnoresult">
+    <h3>Hai inserito una data errata</h3>
+  </div>
+  {% endif %}
+
+  {% if dateError %}
+  <div class="container searchnoresult">
+    <h3>Hai inserito una data errata</h3>
+  </div>
+  {% endif %}
+
+
+<script>
+
+  var popup = document.getElementById("popupprenota");
+  var tableRows = document.getElementById("searchBody").getElementsByTagName("tr");
+  var pEff = document.getElementById("prenEff");
+  var annullaPrenota = document.getElementById("annullaPrenota");
+  var prenotaBtn = document.getElementById("prenotaBtn");
+
+
+  /*Dati ottenuti dopo il click sulla riga*/
+
+  var hotel;
+  var camera;
+
+  for (i = 0; i < tableRows.length; i++)
+    {
+
+      // console.log(row);
+      tableRows[i].onclick = function()
+      {
+        popup.style.visibility = "visible";
+        popup.style.opacity = 1;
+        pEff.style.visibility = "hidden";
+
+        /*Devo prendere i dati della camera: hotel e camera*/
+
+        camera = this.getElementsByTagName("td")[0].getAttribute("data-camera");
+        hotel = this.getElementsByTagName("td")[0].textContent;
+
+        console.log(camera);
+        console.log(hotel);
+        console.log("{{checkin}}");
+        console.log("{{checkout}}");
+
+      };
+    }
+
+    annullaPrenota.onclick = function()
+    {
+      popup.style.visibility = "hidden";
+      popup.style.opacity = 0;
+    };
+
+    // prenotaBtn.onclick = function()
+    // {
+    //   pEff.style.visibility = "visible";
+    // };
+
+    $("#formPrenota").on("submit", function(e)
+    {
+        e.preventDefault();
+        pEff.style.visibility = "visible";
+
+        console.log($("#mailPrenota").val());
+
+        $.ajax(
+          {
+            type: "get",
+            url: "{% url 'booking:prenota' %}",
+            data:
+            {
+                "hotel": hotel,
+                "camera": camera.toString(),
+                "email": $("#mailPrenota").val(),
+                "checkin": "{{checkin}}",
+                "checkout": "{{checkout}}"
+            },
+              success: function (data)
+              {
+                  console.log("success");
+                  console.log("data");
+              },
+              failure: function (data)
+              {
+                  console.log("failure");
+                  console.log("data");
+              }
+          });
+    });
+
+</script>
+
+</body>
+
+</html>
